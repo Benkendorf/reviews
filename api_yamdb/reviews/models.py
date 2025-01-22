@@ -27,7 +27,11 @@ class Title(models.Model):
     )   # См. метод save()
 
     genre = models.ManyToManyField(Genre, through='GenreTitle')
-    category = models.ManyToManyField(Category, through='CategoryTitle')
+    category = models.ForeignKey(
+        User,
+        related_name='titles',
+        on_delete=models.DO_NOTHING
+    )
 
     def save(self, *args, **kwargs):
         """При сохранении тайтла рассчитываем сред. балл из связанных ревью."""
@@ -40,11 +44,6 @@ class Title(models.Model):
 
 class GenreTitle(models.Model):
     genre = models.ForeignKey(Genre, on_delete=models.DO_NOTHING)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-
-
-class CategoryTitle(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.DO_NOTHING)
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
 
