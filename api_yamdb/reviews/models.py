@@ -91,7 +91,7 @@ class Comment(models.Model):
     text = models.TextField()
     author = models.ForeignKey(
         User,
-        related_name='reviews',
+        related_name='comments',
         on_delete=models.CASCADE
     )
 
