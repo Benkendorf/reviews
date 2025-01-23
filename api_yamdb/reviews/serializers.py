@@ -1,9 +1,9 @@
 from datetime import datetime
 
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
+from user.serializers import UserSerializer
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -55,3 +55,22 @@ class TitleSerializer(serializers.ModelSerializer):
                 GenreTitle.objects.create(
                     genre=current_genre, title=title)
             return title
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    title = TitleSerializer()
+    author = UserSerializer()
+
+    class Meta:
+        fields = '__all__'
+        model = Review
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    title = TitleSerializer()
+    review = ReviewSerializer()
+    author = UserSerializer()
+
+    class Meta:
+        fields = '__all__'
+        model = Comment

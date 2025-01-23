@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Avg
 
@@ -60,7 +61,12 @@ class Review(models.Model):
         related_name='reviews',
         on_delete=models.CASCADE
     )
-    score = models.SmallIntegerField()
+    score = models.SmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10)
+        ]
+    )
     pub_date = models.DateTimeField(
         auto_now_add=True
     )
