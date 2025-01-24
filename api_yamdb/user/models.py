@@ -1,14 +1,20 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class User(AbstractUser):
+    ANONYMOUS = 'anonymous'
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
 
-    class Role(models.TextChoices):
-        ANONYMOUS = 'anonymous', 'Аноним'
-        USER = 'user', 'Пользователь'
-        MODERATOR = 'moderator', 'Модератор'
-        ADMIN = 'admin', 'Администратор'
+    ROLE_CHOICES = (
+        (ANONYMOUS, 'Аноним'),
+        (USER, 'Пользователь'),
+        (MODERATOR, 'Модератор'),
+        (ADMIN, 'Администратор'),
+    )
 
     username =  models.CharField(
         max_length=150,
@@ -23,10 +29,14 @@ class User(AbstractUser):
     )
     first_name = models.CharField(
         max_length=150,
+        blank=True,
+        null=True,
         verbose_name='Имя'
     )
     last_name = models.CharField(
         max_length=150,
+        blank=True,
+        null=True,
         verbose_name='Фамилия'
     )
     bio = models.TextField(
@@ -36,19 +46,25 @@ class User(AbstractUser):
     )
     role = models.CharField(
         max_length=20,
-        choices=Role.choices,
-        default=Role.USER,
+        choices=ROLE_CHOICES,
+        default=USER,
         verbose_name='Роль'
     )
 
     @property
     def is_admin(self):
-        return self.role == self.Role.ADMIN or self.is_superuser
+        return self.role == self.ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
-        return self.role == self.Role.MODERATOR
+        return self.role == self.MODERATOR
+
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
 
     def __str__(self):
-        return f'{self.first_name} {self.last_name}'
-
+        return self.username
