@@ -10,16 +10,25 @@ class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50)
 
+    def __str__(self):
+        return self.name
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50)
 
+    def __str__(self):
+        return self.name
+
 
 class Title(models.Model):
     name = models.CharField(max_length=256)
     year = models.SmallIntegerField()
-    description = models.TextField()
+    description = models.TextField(
+        null=True,
+        blank=True
+    )
 
     rating = models.SmallIntegerField(
         default=None,
@@ -41,6 +50,9 @@ class Title(models.Model):
         ).aggregate(Avg('score'))['score__avg']
 
         self.title.save()
+
+    def __str__(self):
+        return self.name
 
 
 class GenreTitle(models.Model):
@@ -79,6 +91,9 @@ class Review(models.Model):
         super().save(*args, **kwargs)
         self.title.save()
 
+    def __str__(self):
+        return self.text
+
 
 class Comment(models.Model):
     title = models.ForeignKey(
@@ -103,3 +118,6 @@ class Comment(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True
     )
+
+    def __str__(self):
+        return self.text

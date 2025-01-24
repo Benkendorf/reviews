@@ -21,6 +21,9 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
+    description = serializers.CharField(
+        required=False
+    )
 
     class Meta:
         fields = '__all__'
@@ -46,18 +49,14 @@ class TitleSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        if 'genre' not in self.initial_data:
-            title = Title.objects.create(**validated_data)
-            return title
-        else:
-            genres = validated_data.pop('genre')
-            title = Title.objects.create(**validated_data)
-            for genre in genres:
-                current_genre = Genre.objects.get(
-                    **genre)
-                GenreTitle.objects.create(
-                    genre=current_genre, title=title)
-            return title
+        genres = validated_data.pop('genre')
+        title = Title.objects.create(**validated_data)
+        for genre in genres:
+            current_genre = Genre.objects.get(
+                **genre)
+            GenreTitle.objects.create(
+                genre=current_genre, title=title)
+        return title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
