@@ -26,11 +26,14 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Title
 
-    def validate(self, data):
-        if data['year'] > datetime.now().year():
+    def validate_year(self, value):
+        if value > datetime.now().year():
             raise serializers.ValidationError(
                 'Нельзя добавить произведение из будущего!'
             )
+        return value
+
+    def validate(self, data):
         if data['category'] not in Category.objects.all():
             raise serializers.ValidationError(
                 'Нельзя добавить произведение несуществующей категории!'
@@ -50,7 +53,7 @@ class TitleSerializer(serializers.ModelSerializer):
             genres = validated_data.pop('genre')
             title = Title.objects.create(**validated_data)
             for genre in genres:
-                current_genre, status = Genre.objects.get(
+                current_genre = Genre.objects.get(
                     **genre)
                 GenreTitle.objects.create(
                     genre=current_genre, title=title)
@@ -64,6 +67,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Review
+
+    def validate_score(self, value):
+        if not (1 < value <= 10):
+            raise serializers.ValidationError('Оценка должна быть от 1 до 10!')
+        return value
 
 
 class CommentSerializer(serializers.ModelSerializer):
