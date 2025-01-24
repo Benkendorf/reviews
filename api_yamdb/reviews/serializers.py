@@ -30,7 +30,7 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
 
     def validate_year(self, value):
-        if value > datetime.now().year():
+        if value > datetime.now().year:
             raise serializers.ValidationError(
                 'Нельзя добавить произведение из будущего!'
             )
