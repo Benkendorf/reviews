@@ -25,7 +25,7 @@ class User(AbstractUser):
     email = models.EmailField(
         max_length=254,
         blank=False,
-        unique=True
+        unique=False
     )
     first_name = models.CharField(
         max_length=150,

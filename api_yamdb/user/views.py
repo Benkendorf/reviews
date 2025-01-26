@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import status, viewsets, filters
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
@@ -18,6 +19,7 @@ class UserViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+    pagination_class = LimitOffsetPagination
 
 def perform_create(self, serializer):
         serializer.save()
@@ -28,15 +30,16 @@ class SignUpViewSet(viewsets.ViewSet):
 
     def create(self, request):
         serializer = SignUpSerializer(data=request.data)
-
         if serializer.is_valid():
             username = serializer.validated_data['username']
             email = serializer.validated_data['email']
-
+            if User.objects.filter(email=email).exclude(username=username).exists():
+                return Response(
+                    {'email': 'Пользователь с таким email уже существует.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             user, created = User.objects.get_or_create(username=username, email=email)
-
             confirmation_code = default_token_generator.make_token(user)
-
             send_mail(
                 subject='Confirmation code for accessing the YaMDB API',
                 message=f'Код подтверждения для пользователя {username}: {confirmation_code}',
@@ -77,7 +80,6 @@ class TokenViewSet(viewsets.ViewSet):
                     {'error': 'Неверный confirmation_code'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
             tokens = user.tokens()
 
             return Response({'token': tokens['access']}, status=status.HTTP_200_OK)
