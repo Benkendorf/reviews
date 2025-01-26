@@ -1,3 +1,5 @@
+from gc import get_objects
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
@@ -111,20 +113,21 @@ class TokenViewSet(viewsets.ViewSet):
         )
 
 
-class MeViewSet(viewsets.ModelViewSet):
+class MeViewSet(viewsets.ViewSet):
     serializer_class = MeSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ('get', 'patch')
     pagination_class = None
 
     def get_object(self):
         return self.request.user
 
-    def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id)
+    def retrieve(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = MeSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def partial_update(self, request, *args, **kwargs):
-        user = request.user
+    def partial_update(self, request, pk=None):
+        user = self.get_object()
         serializer = MeSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()

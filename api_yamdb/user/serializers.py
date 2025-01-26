@@ -62,14 +62,9 @@ class MeSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
         regex=r'^[\w.@+-]+\Z',
         max_length=150,
-        required=False
+        required=True
     )
-    email = serializers.EmailField(
-        max_length=254,
-        required=False
-    )
-
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name', 'bio', 'role')
-        read_only_fields = ('id', 'role',)
+        read_only_fields = ('id', 'role')
