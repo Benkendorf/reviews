@@ -11,6 +11,10 @@ class UserSerializer(serializers.ModelSerializer):
         max_length=150,
         required=True
     )
+    role = serializers.ChoiceField(
+        choices=User.ROLE_CHOICES,
+        default=User.USER
+    )
 
     def validate_username(self, username):
         if username == 'me':
@@ -24,7 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
         read_only_fields = ('id', 'role',)
 
 
@@ -56,3 +60,16 @@ class TokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'confirmation_code')
+
+
+class MeSerializer(serializers.ModelSerializer):
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+\Z',
+        max_length=150,
+        required=False
+    )
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        read_only_fields = ('id', 'role')

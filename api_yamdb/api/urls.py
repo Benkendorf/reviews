@@ -6,8 +6,13 @@ from reviews.views import (CategoryViewSet,
                            TitleViewSet,
                            ReviewViewSet,
                            CommentViewSet)
+from user.views import SignUpViewSet, TokenViewSet, UserViewSet, MeViewSet
 
 router_v1 = DefaultRouter()
+router_v1.register(r'users', UserViewSet, basename='users')
+router_v1.register(r'auth/signup', SignUpViewSet, basename='signup')
+router_v1.register(r'auth/token', TokenViewSet, basename='token')
+
 
 router_v1.register('categories', CategoryViewSet, basename='category')
 router_v1.register('genres', GenreViewSet, basename='genre')
@@ -24,7 +29,6 @@ router_v1.register(
 )
 
 urlpatterns = [
+    path('v1/users/me/', MeViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update'})),
     path('v1/', include(router_v1.urls)),
-    path('v1/auth/', include('user.urls')),
-    path('v1/users/', include('user.urls')),
 ]
