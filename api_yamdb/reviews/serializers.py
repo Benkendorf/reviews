@@ -60,7 +60,6 @@ class TitleSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        print('VALIDATE')
         if data['category'] not in Category.objects.all():
             raise serializers.ValidationError(
                 'Нельзя добавить произведение несуществующей категории!'
@@ -75,7 +74,6 @@ class TitleSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        print('CREATE')
         genres = validated_data.pop('genre')
         title = Title.objects.create(**validated_data)
         for genre in genres:
