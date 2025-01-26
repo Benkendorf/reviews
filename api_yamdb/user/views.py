@@ -20,11 +20,17 @@ class UserViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
-    pagination_class = PageNumberPagination
+    # pagination_class = PageNumberPagination
     lookup_field = 'username'
 
     def perform_create(self, serializer):
-            serializer.save()
+        username = serializer.validated_data.get('username')
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {'error': 'Пользователь с таким именем уже существует.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer.save()
 
     def retrieve(self, request, username=None):
         queryset = User.objects.all()
@@ -45,6 +51,11 @@ class SignUpViewSet(viewsets.ViewSet):
             if User.objects.filter(email=email).exclude(username=username).exists():
                 return Response(
                     {'email': 'Пользователь с таким email уже существует.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if User.objects.filter(username=username).exclude(email=email).exists():
+                return Response(
+                    {'email': 'Пользователь с таким Никнеймом уже существует.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             user, created = User.objects.get_or_create(username=username, email=email)
