@@ -38,7 +38,7 @@ class Title(models.Model):
 
     genre = models.ManyToManyField(Genre, through='GenreTitle')
     category = models.ForeignKey(
-        User,
+        Category,
         related_name='titles',
         on_delete=models.DO_NOTHING
     )
@@ -49,7 +49,7 @@ class Title(models.Model):
             title=self
         ).aggregate(Avg('score'))['score__avg']
 
-        self.title.save()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

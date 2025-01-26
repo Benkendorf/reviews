@@ -32,17 +32,25 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(many=True)
-    category = SlugRelatedField(
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True,
+        allow_null=False,
+        allow_empty=False,
+    )
+    category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
-        slug_field='slug'
+        slug_field='slug',
+        allow_null=False,
+        allow_empty=False,
     )
     description = serializers.CharField(
         required=False
     )
 
     class Meta:
-        fields = ('name', 'year', 'genre', 'category', 'description')
+        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
         model = Title
 
     def validate_name(self, value):
@@ -64,25 +72,28 @@ class TitleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нельзя добавить произведение несуществующей категории!'
             )
-        """
+
         for genre in data['genre']:
             if genre not in Genre.objects.all():
                 raise serializers.ValidationError(
                     'Нельзя добавить произведение несуществующего жанра!'
                 )
-        """
+
         return data
 
     def create(self, validated_data):
+        print('CREATE')
         genres = validated_data.pop('genre')
         title = Title.objects.create(**validated_data)
         for genre in genres:
+            """
             current_genre = get_object_or_404(
                 Genre,
                 slug=genre
             )
+            """
             GenreTitle.objects.create(
-                genre=current_genre, title=title)
+                genre=genre, title=title)
         return title
 
 
