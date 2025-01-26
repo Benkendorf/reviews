@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import status, viewsets, filters
+from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -20,9 +21,17 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     pagination_class = PageNumberPagination
+    lookup_field = 'username'
 
-def perform_create(self, serializer):
-        serializer.save()
+    def perform_create(self, serializer):
+            serializer.save()
+
+    def retrieve(self, request, username=None):
+        queryset = User.objects.all()
+        user = get_object_or_404(queryset, username=username)
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 class SignUpViewSet(viewsets.ViewSet):
