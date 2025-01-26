@@ -28,13 +28,19 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return User.objects.all().order_by('id')
 
+    def create(self, request, *args, **kwargs):
+        serializer = UserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     def perform_create(self, serializer):
         username = serializer.validated_data.get('username')
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError(
                 {'username': 'Пользователь с таким username уже существует.'}
             )
-        user = serializer.save()
+        serializer.save()
 
     def retrieve(self, request, username=None):
         queryset = User.objects.all()
@@ -72,7 +78,7 @@ class SignUpViewSet(viewsets.ViewSet):
             )
 
             return Response(
-                {'username': username, 'email': email},
+                serializer.data,
                 status=status.HTTP_200_OK
             )
 
