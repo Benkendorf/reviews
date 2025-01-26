@@ -39,12 +39,7 @@ class TitleSerializer(serializers.ModelSerializer):
         allow_null=False,
         allow_empty=False,
     )
-    category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(),
-        slug_field='slug',
-        allow_null=False,
-        allow_empty=False,
-    )
+    category = CategorySerializer()
     description = serializers.CharField(
         required=False
     )
