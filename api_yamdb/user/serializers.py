@@ -17,6 +17,10 @@ class UserSerializer(serializers.ModelSerializer):
     )
 
     def validate_username(self, username):
+        if User.objects.filter(username=username).exists():
+            raise serializers.ValidationError(
+                {'username': 'Пользователь с таким username уже существует.'}
+            )
         if username == 'me':
             raise ValidationError('Пользователь с именем me запрещен.')
         return username
@@ -38,6 +42,16 @@ class SignUpSerializer(serializers.ModelSerializer):
         max_length=150,
         required=True
     )
+
+    def validate(self, obj):
+        username = obj['username']
+        email = obj['email']
+
+        if User.objects.filter(email=email).exclude(username=username).exists():
+            raise serializers.ValidationError({'email': 'Пользователь с таким email уже существует.'})
+        if User.objects.filter(username=username).exclude(email=email).exists():
+            raise serializers.ValidationError({'username': 'Пользователь с таким никнеймом уже существует.'})
+        return obj
 
     def validate_username(self, username):
         if username == 'me':

@@ -1,9 +1,7 @@
-from gc import get_objects
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from rest_framework import status, viewsets, filters, serializers
+from rest_framework import status, viewsets, filters
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -16,7 +14,6 @@ User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminRole]
     http_method_names = ('get', 'post', 'patch', 'delete')
@@ -35,16 +32,11 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
-        username = serializer.validated_data.get('username')
-        if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError(
-                {'username': 'Пользователь с таким username уже существует.'}
-            )
         serializer.save()
 
-    def retrieve(self, request, username=None):
+    def retrieve(self, request, *args, **kwargs):
         queryset = User.objects.all()
-        user = get_object_or_404(queryset, username=username)
+        user = get_object_or_404(queryset, username=self.kwargs['username'])
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -54,52 +46,34 @@ class SignUpViewSet(viewsets.ViewSet):
 
     def create(self, request):
         serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data['username']
-            email = serializer.validated_data['email']
-            if User.objects.filter(email=email).exclude(username=username).exists():
-                return Response(
-                    {'email': 'Пользователь с таким email уже существует.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            if User.objects.filter(username=username).exclude(email=email).exists():
-                return Response(
-                    {'email': 'Пользователь с таким Никнеймом уже существует.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            user, created = User.objects.get_or_create(username=username, email=email)
-            confirmation_code = default_token_generator.make_token(user)
-            send_mail(
-                subject='Confirmation code for accessing the YaMDB API',
-                message=f'Код подтверждения для пользователя {username}: {confirmation_code}',
-                from_email='yamdb@yamdb.ru',
-                recipient_list=[email],
-                fail_silently=False,
-            )
-
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+        serializer.is_valid(raise_exception=True)
+        user, created = User.objects.get_or_create(
+            username=serializer.validated_data['username'],
+            email=serializer.validated_data['email']
         )
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject='Confirmation code for accessing to the YaMDB API',
+            message=f'Код подтверждения для пользователя {user.username}: {confirmation_code}',
+            from_email='yamdb@yamdb.ru',
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TokenViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
     serializer_class = TokenSerializer
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request):
         serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data['username']
             confirmation_code = serializer.validated_data['confirmation_code']
             try:
                 user = User.objects.get(username=username)
-            except User.DoesNotExist:
+            except:
                 return Response(
                     {'error': f'Пользователь с ником {username} не найден'},
                     status=status.HTTP_404_NOT_FOUND
