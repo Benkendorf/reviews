@@ -3,7 +3,7 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
@@ -42,7 +42,7 @@ class TitleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        fields = ('id', 'name', 'year', 'genre', 'rating', 'category', 'description')
         model = Title
 
 
@@ -203,6 +203,19 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
             Title,
             id=title_id
         )
+        """
+        if Review.objects.filter(
+            title=get_object_or_404(
+                Title,
+                id=title_id
+            ),
+            author=self.context['request'].user
+        ).exists():
+            raise serializers.ValidationError(
+                'Вы уже оценили это произведение!'
+            )
+        """
+
         review = Review.objects.create(
             title=title,
             author=self.context['request'].user,
@@ -214,7 +227,9 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     title = TitleCreateSerializer()
-    author = UserSerializer()
+    author = serializers.StringRelatedField(
+        read_only=True
+    )
 
     class Meta:
         fields = '__all__'

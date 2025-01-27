@@ -70,6 +70,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     queryset = Review.objects.all().order_by('id')
     serializer_class = ReviewSerializer
     permission_classes = (OwnerOrModerOrAdminOrSuperuserOrReadOnly,)
