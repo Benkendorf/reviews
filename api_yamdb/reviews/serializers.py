@@ -42,8 +42,7 @@ class TitleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre',
-                  'rating', 'category', 'description')
+        fields = '__all__'
         model = Title
 
 
@@ -66,7 +65,7 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        fields = '__all__'
         model = Title
 
     def validate_name(self, value):
@@ -136,7 +135,7 @@ class TitleUpdateSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        fields = '__all__'
         model = Title
 
     def validate_name(self, value):
