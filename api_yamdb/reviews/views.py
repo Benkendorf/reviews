@@ -11,6 +11,7 @@ from .permissions import (OwnerOrModerOrAdminOrSuperuserOrReadOnly,
                           AdminOrSuperuserOrReadOnly,
                           AdminOrSuperuser)
 from .serializers import (CategorySerializer,
+                          CommentCreateSerializer,
                           CommentSerializer,
                           GenreSerializer,
                           ReviewSerializer,
@@ -86,10 +87,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     queryset = Comment.objects.all().order_by('id')
     serializer_class = CommentSerializer
     permission_classes = (OwnerOrModerOrAdminOrSuperuserOrReadOnly,)
     pagination_class = PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve', 'destroy'):
+            return CommentSerializer
+        return CommentCreateSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

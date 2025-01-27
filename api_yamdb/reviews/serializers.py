@@ -225,10 +225,57 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
 
+class CommentCreateSerializer(serializers.ModelSerializer):
+    title = serializers.PrimaryKeyRelatedField(
+        queryset=Title.objects.all(),
+        required=False
+    )
+    review = serializers.PrimaryKeyRelatedField(
+        queryset=Review.objects.all(),
+        required=False
+    )
+    author = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Comment
+
+    def create(self, validated_data):
+        title_id = self.context.get('request'
+                                    ).parser_context.get('kwargs'
+                                                         ).get('title_id')
+        review_id = self.context.get('request'
+                                     ).parser_context.get('kwargs'
+                                                          ).get('review_id')
+
+        title = get_object_or_404(
+            Title,
+            id=title_id
+        )
+
+        review = get_object_or_404(
+            Review,
+            id=review_id
+        )
+
+        comment = Comment.objects.create(
+            title=title,
+            review=review,
+            author=self.context['request'].user,
+            text=validated_data['text']
+        )
+        return comment
+
+
 class CommentSerializer(serializers.ModelSerializer):
     title = TitleCreateSerializer()
     review = ReviewSerializer()
-    author = UserSerializer()
+    author = serializers.StringRelatedField(
+        read_only=True
+    )
 
     class Meta:
         fields = '__all__'
