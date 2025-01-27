@@ -99,7 +99,6 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        print('CREATE')
         genres = validated_data.pop('genre')
         title = Title.objects.create(**validated_data)
         for genre in genres:
@@ -151,10 +150,6 @@ class TitleUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        print('UPDATE')
-        #title, title_status = Title.objects.get_or_create(
-        #    id=validated_data['pk']
-        #)
         if 'genre' in validated_data:
             genres = validated_data.pop('genre')
             for genre in genres:
