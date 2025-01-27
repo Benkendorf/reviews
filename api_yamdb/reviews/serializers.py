@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -7,6 +8,8 @@ from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
 from user.serializers import UserSerializer
+
+User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -171,9 +174,16 @@ class TitleUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    title = TitleCreateSerializer()
-    author = UserSerializer()
+class ReviewCreateSerializer(serializers.ModelSerializer):
+
+    title = serializers.PrimaryKeyRelatedField(
+        queryset=Title.objects.all(),
+        required=False
+    )
+    author = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False
+    )
 
     class Meta:
         fields = '__all__'
@@ -183,6 +193,32 @@ class ReviewSerializer(serializers.ModelSerializer):
         if not (1 < value <= 10):
             raise serializers.ValidationError('Оценка должна быть от 1 до 10!')
         return value
+
+    def create(self, validated_data):
+        title_id = self.context.get('request').parser_context.get('kwargs').get('title_id')
+
+        print('CREATE')
+        print(title_id)
+        title = get_object_or_404(
+            Title,
+            id=title_id
+        )
+        review = Review.objects.create(
+            title=title,
+            author=self.context['request'].user,
+            text=validated_data['text'],
+            score=validated_data['score']
+        )
+        return review
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    title = TitleCreateSerializer()
+    author = UserSerializer()
+
+    class Meta:
+        fields = '__all__'
+        model = Review
 
 
 class CommentSerializer(serializers.ModelSerializer):

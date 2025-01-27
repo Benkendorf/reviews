@@ -14,6 +14,7 @@ from .serializers import (CategorySerializer,
                           CommentSerializer,
                           GenreSerializer,
                           ReviewSerializer,
+                          ReviewCreateSerializer,
                           TitleSerializer,
                           TitleCreateSerializer,
                           TitleUpdateSerializer)
@@ -73,6 +74,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (OwnerOrModerOrAdminOrSuperuserOrReadOnly,)
     pagination_class = PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve', 'destroy'):
+            return ReviewSerializer
+        return ReviewCreateSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

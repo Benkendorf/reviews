@@ -19,7 +19,7 @@ class Genre(models.Model):
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Title(models.Model):
