@@ -1,14 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from rest_framework import status, viewsets, filters
+from rest_framework import filters, viewsets, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from user.permissions import IsAdminRole
-from user.serializers import SignUpSerializer, TokenSerializer, UserSerializer, MeSerializer
+from user.serializers import (MeSerializer,
+                              TokenSerializer,
+                              SignUpSerializer,
+                              UserSerializer)
 
 User = get_user_model()
 
@@ -47,14 +50,14 @@ class SignUpViewSet(viewsets.ViewSet):
     def create(self, request):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user, created = User.objects.get_or_create(
+        user, _ = User.objects.get_or_create(
             username=serializer.validated_data['username'],
             email=serializer.validated_data['email']
         )
-        confirmation_code = default_token_generator.make_token(user)
+        confirm_code = default_token_generator.make_token(user)
         send_mail(
             subject='Confirmation code for accessing to the YaMDB API',
-            message=f'Код подтверждения для пользователя {user.username}: {confirmation_code}',
+            message=f'Код подтверждения для {user.username}: {confirm_code}',
             from_email='yamdb@yamdb.ru',
             recipient_list=[user.email],
             fail_silently=False,
@@ -70,22 +73,24 @@ class TokenViewSet(viewsets.ViewSet):
         serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data['username']
-            confirmation_code = serializer.validated_data['confirmation_code']
+            confirm_code = serializer.validated_data['confirmation_code']
             try:
                 user = User.objects.get(username=username)
-            except:
+            except User.DoesNotExist:
                 return Response(
                     {'error': f'Пользователь с ником {username} не найден'},
                     status=status.HTTP_404_NOT_FOUND
                 )
-            if not default_token_generator.check_token(user, confirmation_code):
+            if not default_token_generator.check_token(user, confirm_code):
                 return Response(
                     {'error': 'Неверный confirmation_code'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             tokens = user.tokens()
 
-            return Response({'token': tokens['access']}, status=status.HTTP_200_OK)
+            return Response(
+                {'token': tokens['access']}, status=status.HTTP_200_OK
+            )
 
         return Response(
             serializer.errors,
@@ -101,7 +106,7 @@ class MeViewSet(viewsets.ViewSet):
     def get_object(self):
         return self.request.user
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request):
         user = self.get_object()
         serializer = MeSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
