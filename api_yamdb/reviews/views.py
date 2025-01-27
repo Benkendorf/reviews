@@ -6,6 +6,7 @@ from rest_framework import filters, mixins, status, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
+from .filters import TitleFilter
 from .models import Category, Comment, Genre, Review, Title
 from .permissions import (OwnerOrModerOrAdminOrSuperuserOrReadOnly,
                           AdminOrSuperuserOrReadOnly,
@@ -58,9 +59,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('genre__slug',)
-
-    #search_fields = ('genre__slug',)
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve', 'destroy'):
