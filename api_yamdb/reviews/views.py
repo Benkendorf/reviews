@@ -1,7 +1,10 @@
+from django_filters.rest_framework import DjangoFilterBackend
+
 from django.shortcuts import render
 
-from rest_framework import filters, mixins, viewsets
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 from .models import Category, Comment, Genre, Review, Title
 from .permissions import (OwnerOrModerOrAdminOrSuperuserOrReadOnly,
@@ -11,7 +14,9 @@ from .serializers import (CategorySerializer,
                           CommentSerializer,
                           GenreSerializer,
                           ReviewSerializer,
-                          TitleSerializer)
+                          TitleSerializer,
+                          TitleCreateSerializer,
+                          TitleUpdateSerializer)
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -44,10 +49,23 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     queryset = Title.objects.all().order_by('id')
-    serializer_class = TitleSerializer
+    serializer_class = TitleCreateSerializer
     permission_classes = (AdminOrSuperuserOrReadOnly,)
     pagination_class = PageNumberPagination
+
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('genre__slug',)
+
+    #search_fields = ('genre__slug',)
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve', 'destroy'):
+            return TitleSerializer
+        elif self.action == 'partial_update':
+            return TitleUpdateSerializer
+        return TitleCreateSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

@@ -57,8 +57,6 @@ class Test04TitleAPI:
             'description': 'Рон Свонсон рекомендует.'
         }
         response = admin_client.post(self.TITLES_URL, data=post_data_1)
-        print(post_data_1)
-        print(response.json())
         assert response.status_code == HTTPStatus.CREATED, (
             f'Если POST-запрос администратора к `{self.TITLES_URL}` '
             'содержит корректные данные - должен вернуться ответ со статусом '
@@ -160,6 +158,7 @@ class Test04TitleAPI:
             f'{self.TITLES_URL}?genre={genres[1]["slug"]}'
         )
         data = response.json()
+        print(data)
         assert len(data['results']) == 2, (
             f'Проверьте, что для эндпоинта `{self.TITLES_URL}` реализована '
             'возможность фильтрации по полю `genre` с использованием '

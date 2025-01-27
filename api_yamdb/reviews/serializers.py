@@ -32,6 +32,18 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+    description = serializers.CharField(
+        required=False
+    )
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        model = Title
+
+
+class TitleCreateSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
@@ -39,7 +51,12 @@ class TitleSerializer(serializers.ModelSerializer):
         allow_null=False,
         allow_empty=False,
     )
-    category = CategorySerializer()
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug',
+        allow_null=False,
+        allow_empty=False,
+    )
     description = serializers.CharField(
         required=False
     )
@@ -68,6 +85,11 @@ class TitleSerializer(serializers.ModelSerializer):
                 'Нельзя добавить произведение несуществующей категории!'
             )
 
+        if 'genre' not in data:
+            raise serializers.ValidationError(
+                'Нельзя добавить произведение без жанра!'
+            )
+
         for genre in data['genre']:
             if genre not in Genre.objects.all():
                 raise serializers.ValidationError(
@@ -92,8 +114,70 @@ class TitleSerializer(serializers.ModelSerializer):
         return title
 
 
+class TitleUpdateSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True,
+        allow_null=False,
+        allow_empty=False,
+    )
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug',
+        allow_null=False,
+        allow_empty=False,
+    )
+    description = serializers.CharField(
+        required=False
+    )
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        model = Title
+
+    def validate_name(self, value):
+        if len(value) > 256:
+            raise serializers.ValidationError(
+                'Название не может быть длиннее 256 символов!'
+            )
+        return value
+
+    def validate_year(self, value):
+        if value > datetime.now().year:
+            raise serializers.ValidationError(
+                'Нельзя добавить произведение из будущего!'
+            )
+        return value
+
+    def update(self, instance, validated_data):
+        print('UPDATE')
+        #title, title_status = Title.objects.get_or_create(
+        #    id=validated_data['pk']
+        #)
+        if 'genre' in validated_data:
+            genres = validated_data.pop('genre')
+            for genre in genres:
+                current_genre, genre_status = Genre.objects.get_or_create(
+                    **genre
+                )
+                GenreTitle.objects.get_or_create(
+                    genre=current_genre, title=instance)
+
+        if 'name' in validated_data:
+            instance.name = validated_data['name']
+        if 'year' in validated_data:
+            instance.year = validated_data['year']
+        if 'description' in validated_data:
+            instance.description = validated_data['description']
+        if 'category' in validated_data:
+            instance.category = validated_data['category']
+        instance.save()
+        return instance
+
+
 class ReviewSerializer(serializers.ModelSerializer):
-    title = TitleSerializer()
+    title = TitleCreateSerializer()
     author = UserSerializer()
 
     class Meta:
@@ -107,7 +191,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    title = TitleSerializer()
+    title = TitleCreateSerializer()
     review = ReviewSerializer()
     author = UserSerializer()
 
