@@ -155,7 +155,6 @@ def create_single_review(client, title_id, text, score):
     response = client.post(
         f'/api/v1/titles/{title_id}/reviews/', data=data
     )
-    print(response.json())
     assert response.status_code == HTTPStatus.CREATED, (
         'Если POST-запрос авторизованного пользователя к '
         '`/api/v1/titles/{title_id}/reviews/` содержит корректные данные - '

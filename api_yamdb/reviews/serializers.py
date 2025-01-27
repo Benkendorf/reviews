@@ -42,7 +42,8 @@ class TitleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre', 'rating', 'category', 'description')
+        fields = ('id', 'name', 'year', 'genre',
+                  'rating', 'category', 'description')
         model = Title
 
 
@@ -195,26 +196,14 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        title_id = self.context.get('request').parser_context.get('kwargs').get('title_id')
+        title_id = self.context.get('request'
+                                    ).parser_context.get('kwargs'
+                                                         ).get('title_id')
 
-        print('CREATE')
-        print(title_id)
         title = get_object_or_404(
             Title,
             id=title_id
         )
-        """
-        if Review.objects.filter(
-            title=get_object_or_404(
-                Title,
-                id=title_id
-            ),
-            author=self.context['request'].user
-        ).exists():
-            raise serializers.ValidationError(
-                'Вы уже оценили это произведение!'
-            )
-        """
 
         review = Review.objects.create(
             title=title,
