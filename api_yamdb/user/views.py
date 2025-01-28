@@ -29,7 +29,9 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return User.objects.all().order_by('id')
 
-    @action(methods=['get', 'patch'], detail=False, url_name='me', permission_classes=[IsAuthenticated])
+    @action(methods=['get', 'patch'],
+            detail=False, url_name='me',
+            permission_classes=[IsAuthenticated])
     def me(self, request):
         if request.method == 'GET':
             user = self.request.user
@@ -41,7 +43,9 @@ class UserViewSet(viewsets.ModelViewSet):
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
     def create(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
