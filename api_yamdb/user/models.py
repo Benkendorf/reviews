@@ -16,7 +16,7 @@ class User(AbstractUser):
         (ADMIN, 'Администратор'),
     )
 
-    username =  models.CharField(
+    username = models.CharField(
         max_length=150,
         blank=False,
         unique=True,
@@ -42,7 +42,7 @@ class User(AbstractUser):
     bio = models.TextField(
         blank=True,
         null=True,
-        verbose_name = 'Биография'
+        verbose_name='Биография'
     )
     role = models.CharField(
         max_length=20,

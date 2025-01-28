@@ -17,18 +17,26 @@ class UserSerializer(serializers.ModelSerializer):
     )
 
     def validate_username(self, username):
+        if User.objects.filter(username=username).exists():
+            raise serializers.ValidationError(
+                {'username': 'Пользователь с таким username уже существует.'}
+            )
         if username == 'me':
             raise ValidationError('Пользователь с именем me запрещен.')
         return username
 
     def validate_email(self, email):
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Пользователь с таким email уже существует.')
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует.'
+            )
         return email
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        )
         read_only_fields = ('id', 'role',)
 
 
@@ -38,6 +46,20 @@ class SignUpSerializer(serializers.ModelSerializer):
         max_length=150,
         required=True
     )
+
+    def validate(self, obj):
+        user = obj['username']
+        email = obj['email']
+
+        if User.objects.filter(email=email).exclude(username=user).exists():
+            raise serializers.ValidationError(
+                {'email': 'Пользователь с таким email уже существует.'}
+            )
+        if User.objects.filter(username=user).exclude(email=email).exists():
+            raise serializers.ValidationError(
+                {'username': 'Пользователь с таким никнеймом уже существует.'}
+            )
+        return obj
 
     def validate_username(self, username):
         if username == 'me':
@@ -71,5 +93,7 @@ class MeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        )
         read_only_fields = ('id', 'role')
