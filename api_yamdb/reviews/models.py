@@ -19,7 +19,7 @@ class Genre(models.Model):
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Title(models.Model):
@@ -38,7 +38,7 @@ class Title(models.Model):
 
     genre = models.ManyToManyField(Genre, through='GenreTitle')
     category = models.ForeignKey(
-        User,
+        Category,
         related_name='titles',
         on_delete=models.DO_NOTHING
     )
@@ -49,7 +49,7 @@ class Title(models.Model):
             title=self
         ).aggregate(Avg('score'))['score__avg']
 
-        self.title.save()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -93,6 +93,14 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title'
+            )
+        ]
 
 
 class Comment(models.Model):

@@ -1,17 +1,21 @@
-from django.shortcuts import render
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import filters, mixins, viewsets
 from rest_framework.pagination import PageNumberPagination
 
+from .filters import TitleFilter
 from .models import Category, Comment, Genre, Review, Title
 from .permissions import (OwnerOrModerOrAdminOrSuperuserOrReadOnly,
-                          AdminOrSuperuserOrReadOnly,
-                          AdminOrSuperuser)
+                          AdminOrSuperuserOrReadOnly)
 from .serializers import (CategorySerializer,
+                          CommentCreateSerializer,
                           CommentSerializer,
                           GenreSerializer,
                           ReviewSerializer,
-                          TitleSerializer)
+                          ReviewCreateSerializer,
+                          TitleSerializer,
+                          TitleCreateSerializer,
+                          TitleUpdateSerializer)
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -44,27 +48,50 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     queryset = Title.objects.all().order_by('id')
-    serializer_class = TitleSerializer
+    serializer_class = TitleCreateSerializer
     permission_classes = (AdminOrSuperuserOrReadOnly,)
     pagination_class = PageNumberPagination
 
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve', 'destroy'):
+            return TitleSerializer
+        elif self.action == 'partial_update':
+            return TitleUpdateSerializer
+        return TitleCreateSerializer
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     queryset = Review.objects.all().order_by('id')
     serializer_class = ReviewSerializer
     permission_classes = (OwnerOrModerOrAdminOrSuperuserOrReadOnly,)
     pagination_class = PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve', 'destroy'):
+            return ReviewSerializer
+        return ReviewCreateSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     queryset = Comment.objects.all().order_by('id')
     serializer_class = CommentSerializer
     permission_classes = (OwnerOrModerOrAdminOrSuperuserOrReadOnly,)
     pagination_class = PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve', 'destroy'):
+            return CommentSerializer
+        return CommentCreateSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
