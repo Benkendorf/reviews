@@ -4,13 +4,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class User(AbstractUser):
-    ANONYMOUS = 'anonymous'
     USER = 'user'
     MODERATOR = 'moderator'
     ADMIN = 'admin'
 
     ROLE_CHOICES = (
-        (ANONYMOUS, 'Аноним'),
         (USER, 'Пользователь'),
         (MODERATOR, 'Модератор'),
         (ADMIN, 'Администратор'),
