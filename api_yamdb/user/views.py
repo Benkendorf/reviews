@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import filters, viewsets, status
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -27,6 +28,20 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return User.objects.all().order_by('id')
+
+    @action(methods=['get', 'patch'], detail=False, url_name='me', permission_classes=[IsAuthenticated])
+    def me(self, request):
+        if request.method == 'GET':
+            user = self.request.user
+            serializer = MeSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == 'PATCH':
+            user = self.request.user
+            serializer = MeSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
@@ -97,24 +112,11 @@ class TokenViewSet(viewsets.ViewSet):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-
-class MeViewSet(viewsets.ViewSet):
-    serializer_class = MeSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = None
-
-    def get_object(self):
-        return self.request.user
-
-    def retrieve(self, request):
-        user = self.get_object()
-        serializer = MeSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def partial_update(self, request, pk=None):
-        user = self.get_object()
-        serializer = MeSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#
+# class MeViewSet(viewsets.ViewSet):
+#     serializer_class = MeSerializer
+#     permission_classes = [IsAuthenticated]
+#     pagination_class = None
+#
+#     def get_object(self):
+#         return self.request.user
