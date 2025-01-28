@@ -385,6 +385,6 @@ PATCH /api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/
 ## Контакты
    
 **Авторы:** Егор Коротаев, Александр Степанищев      
-**Email:** splash.dj@yandex.ru     
+**Email:** egokor2013@yandex.ru, splash.dj@yandex.ru
 **Telegram:** @bnkndrf, @stsplash     
 **GitHub:** [Benkendorf] <https://github.com/Benkendorf> | [stsplash] <https://github.com/stsplash>   
