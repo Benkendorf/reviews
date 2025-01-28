@@ -3,11 +3,9 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
-from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueValidator
 
 from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
-from user.serializers import UserSerializer
 
 User = get_user_model()
 

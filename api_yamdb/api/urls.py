@@ -29,6 +29,7 @@ router_v1.register(
 )
 
 urlpatterns = [
-    path('v1/users/me/', MeViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update'})),
+    path('v1/users/me/', MeViewSet.as_view({'get': 'retrieve',
+                                            'patch': 'partial_update'})),
     path('v1/', include(router_v1.urls)),
 ]
