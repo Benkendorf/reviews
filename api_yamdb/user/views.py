@@ -111,12 +111,3 @@ class TokenViewSet(viewsets.ViewSet):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-
-#
-# class MeViewSet(viewsets.ViewSet):
-#     serializer_class = MeSerializer
-#     permission_classes = [IsAuthenticated]
-#     pagination_class = None
-#
-#     def get_object(self):
-#         return self.request.user
