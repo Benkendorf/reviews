@@ -55,7 +55,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         return obj
 
 
-class TokenSerializer(serializers.ModelSerializer):
+class TokenSerializer(serializers.Serializer):
     username = serializers.RegexField(
         regex=PATTERN_NAME,
         max_length=MAX_LENGTH_NAME,
@@ -68,16 +68,16 @@ class TokenSerializer(serializers.ModelSerializer):
         fields = ('username', 'confirmation_code')
 
 
-class MeSerializer(serializers.ModelSerializer):
-    username = serializers.RegexField(
-        regex=PATTERN_NAME,
-        max_length=MAX_LENGTH_NAME,
-        required=False
-    )
-
-    class Meta:
-        model = User
-        fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
-        )
-        read_only_fields = ('role',)
+# class MeSerializer(serializers.ModelSerializer):
+#     username = serializers.RegexField(
+#         regex=PATTERN_NAME,
+#         max_length=MAX_LENGTH_NAME,
+#         required=False
+#     )
+#
+#     class Meta:
+#         model = User
+#         fields = (
+#             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+#         )
+#         read_only_fields = ('role',)

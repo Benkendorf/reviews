@@ -9,8 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from user.permissions import IsAdminRole
-from user.serializers import (MeSerializer,
-                              TokenSerializer,
+from user.serializers import (TokenSerializer,
                               SignUpSerializer,
                               UserSerializer)
 
@@ -27,25 +26,21 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
 
     def get_queryset(self):
-        return User.objects.all().order_by('id')
+        return User.objects.all().order_by('username')
 
     @action(methods=['get', 'patch'],
             detail=False, url_name='me',
             permission_classes=[IsAuthenticated])
     def me(self, request):
         if request.method == 'GET':
-            user = self.request.user
-            serializer = MeSerializer(user)
+            serializer = UserSerializer(request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == 'PATCH':
-            user = self.request.user
-            serializer = MeSerializer(user, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+
+        elif request.method == 'PATCH':
+            serializer = UserSerializer(request.user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(role=request.user.role)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
