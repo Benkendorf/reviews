@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
-        read_only_fields = ('id', 'role',)
+        read_only_fields = ('role',)
 
     def validate_email(self, email):
         if User.objects.filter(email=email).exists():
@@ -80,4 +80,4 @@ class MeSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
-        read_only_fields = ('id', 'role')
+        read_only_fields = ('role',)
