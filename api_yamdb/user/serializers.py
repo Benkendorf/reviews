@@ -1,36 +1,17 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+
+from api.constants import MAX_LENGTH_NAME, PATTERN_NAME
+from user.validators import validate_me, validate_regex
 
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.RegexField(
-        regex=r'^[\w.@+-]+\Z',
-        max_length=150,
-        required=True
-    )
     role = serializers.ChoiceField(
         choices=User.ROLE_CHOICES,
         default=User.USER
     )
-
-    def validate_username(self, username):
-        if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError(
-                {'username': 'Пользователь с таким username уже существует.'}
-            )
-        if username == 'me':
-            raise ValidationError('Пользователь с именем me запрещен.')
-        return username
-
-    def validate_email(self, email):
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError(
-                'Пользователь с таким email уже существует.'
-            )
-        return email
 
     class Meta:
         model = User
@@ -39,13 +20,25 @@ class UserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id', 'role',)
 
+    def validate_email(self, email):
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует.'
+            )
+        return email
+
 
 class SignUpSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
-        regex=r'^[\w.@+-]+\Z',
-        max_length=150,
-        required=True
+        regex=PATTERN_NAME,
+        max_length=MAX_LENGTH_NAME,
+        required=True,
+        validators=[validate_me, validate_regex]
     )
+
+    class Meta:
+        model = User
+        fields = ('username', 'email')
 
     def validate(self, obj):
         user = obj['username']
@@ -61,20 +54,11 @@ class SignUpSerializer(serializers.ModelSerializer):
             )
         return obj
 
-    def validate_username(self, username):
-        if username == 'me':
-            raise ValidationError('Пользователь с именем me запрещен.')
-        return username
-
-    class Meta:
-        model = User
-        fields = ('username', 'email')
-
 
 class TokenSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
-        regex=r'^[\w.@+-]+\Z',
-        max_length=150,
+        regex=PATTERN_NAME,
+        max_length=MAX_LENGTH_NAME,
         required=True
     )
     confirmation_code = serializers.CharField(required=True)
@@ -86,8 +70,8 @@ class TokenSerializer(serializers.ModelSerializer):
 
 class MeSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
-        regex=r'^[\w.@+-]+\Z',
-        max_length=150,
+        regex=PATTERN_NAME,
+        max_length=MAX_LENGTH_NAME,
         required=False
     )
 
