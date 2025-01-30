@@ -38,8 +38,10 @@ class TitleSerializer(serializers.ModelSerializer):
     description = serializers.CharField(
         required=False
     )
+    rating = serializers.IntegerField()
 
     class Meta:
+        #fields = ('id', 'genre', 'category', 'description', 'year', 'rating')
         fields = '__all__'
         model = Title
 
@@ -98,20 +100,6 @@ class TitleCreateSerializer(serializers.ModelSerializer):
                 )
 
         return data
-
-    def create(self, validated_data):
-        genres = validated_data.pop('genre')
-        title = Title.objects.create(**validated_data)
-        for genre in genres:
-            """
-            current_genre = get_object_or_404(
-                Genre,
-                slug=genre
-            )
-            """
-            GenreTitle.objects.create(
-                genre=genre, title=title)
-        return title
 
 
 class TitleUpdateSerializer(serializers.ModelSerializer):
@@ -178,8 +166,9 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         queryset=Title.objects.all(),
         required=False
     )
-    author = serializers.PrimaryKeyRelatedField(
+    author = serializers.SlugRelatedField(
         queryset=User.objects.all(),
+        slug_field='username',
         required=False
     )
 
@@ -241,17 +230,9 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         model = Comment
 
     def create(self, validated_data):
-        title_id = self.context.get('request'
-                                    ).parser_context.get('kwargs'
-                                                         ).get('title_id')
         review_id = self.context.get('request'
                                      ).parser_context.get('kwargs'
                                                           ).get('review_id')
-
-        title = get_object_or_404(
-            Title,
-            id=title_id
-        )
 
         review = get_object_or_404(
             Review,
@@ -259,7 +240,6 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         )
 
         comment = Comment.objects.create(
-            title=title,
             review=review,
             author=self.context['request'].user,
             text=validated_data['text']
@@ -268,7 +248,6 @@ class CommentCreateSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    title = TitleCreateSerializer()
     review = ReviewSerializer()
     author = serializers.StringRelatedField(
         read_only=True

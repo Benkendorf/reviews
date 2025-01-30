@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import filters, mixins, viewsets
@@ -49,7 +50,9 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'head', 'patch', 'delete']
-    queryset = Title.objects.all().order_by('id')
+    queryset = Title.objects.all().annotate(
+        rating=Avg('reviews__score')
+    ).order_by('name')
     serializer_class = TitleCreateSerializer
     permission_classes = (AdminOrSuperuserOrReadOnly,)
     pagination_class = PageNumberPagination

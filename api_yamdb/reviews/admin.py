@@ -1,21 +1,31 @@
 from django.contrib import admin
 
 # Register your models here.
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
 
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'year',
-                    'description', 'category', 'rating')
+                    'description', 'category', 'genres')
+    list_editable = ('category',)
     search_fields = ('name', 'genre', 'category', 'year')
     filter_horizontal = ('genre',)
+
+    @admin.display
+    def genres(self, obj):
+        return ', '.join([g.name for g in list(obj.genre.all())])
 
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug')
     search_fields = ('name', 'slug')
+
+
+@admin.register(GenreTitle)
+class GenreTitleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'genre')
 
 
 @admin.register(Category)
@@ -32,5 +42,5 @@ class ReviewAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'review', 'text', 'author', 'pub_date')
+    list_display = ('id', 'review', 'text', 'author', 'pub_date')
     search_fields = ('title', 'text')
