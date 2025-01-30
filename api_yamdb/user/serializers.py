@@ -1,10 +1,12 @@
+from attr.setters import validate
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.response import Response
 
-from api.constants import MAX_LENGTH_NAME, PATTERN_NAME, EMAIL_SENDERS_YAMDB
+from api.constants import MAX_LENGTH_NAME, PATTERN_NAME, EMAIL_SENDERS_YAMDB, MAX_LENGTH_EMAIL
 from user.validators import validate_me, validate_regex
 
 User = get_user_model()
@@ -23,13 +25,6 @@ class UserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('role',)
 
-    def validate_email(self, email):
-        if User.objects.filter(email=email).exists():
-            raise ValidationError(
-                'Пользователь с таким email уже существует.'
-            )
-        return email
-
 
 class SignUpSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
@@ -38,39 +33,39 @@ class SignUpSerializer(serializers.ModelSerializer):
         required=True,
         validators=[validate_me, validate_regex]
     )
+    email = serializers.EmailField(
+        required=True,
+        max_length=MAX_LENGTH_EMAIL,
+    )
 
     class Meta:
         model = User
         fields = ('username', 'email')
 
     def validate(self, validate_data):
-        user = validate_data['username']
+        username = validate_data['username']
         email = validate_data['email']
-
-        if User.objects.filter(email=email).exclude(username=user).exists():
-            raise ValidationError(
-                {'email': 'Пользователь с таким email уже существует.'}
-            )
-        if User.objects.filter(username=user).exclude(email=email).exists():
-            raise ValidationError(
-                {'username': 'Пользователь с таким никнеймом уже существует.'}
-            )
+        if User.objects.filter(email=email).exclude(username=username).exists():
+            raise ValidationError({'email': 'Такой email уже существует.'})
+        if User.objects.filter(username=username).exclude(email=email).exists():
+            raise ValidationError({'username': 'Такой username уже существует.'})
         return validate_data
 
-    def create(self, validate_data):
-        user, created = User.objects.get_or_create(
-            username=validate_data['username'],
-            email=validate_data['email']
+    def create(self, validated_data):
+        username = validated_data['username']
+        email = validated_data['email']
+
+        user, created = User.objects.get_or_create(username=username, email=email)
+
+        confirmation_code = default_token_generator.make_token(user)
+
+        send_mail(
+            subject='Confirmation code for accessing the YaMDB API',
+            message=f'Код подтверждения для пользователя {user.username}: {confirmation_code}',
+            from_email=EMAIL_SENDERS_YAMDB,
+            recipient_list=[user.email],
+            fail_silently=False,
         )
-        if created:
-            confirmation_code = default_token_generator.make_token(user)
-            send_mail(
-                subject='Confirmation code for accessing the YaMDB API',
-                message=f'Код подтверждения для пользователя {user.username}: {confirmation_code}',
-                from_email=EMAIL_SENDERS_YAMDB,
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
         return user
 
 
