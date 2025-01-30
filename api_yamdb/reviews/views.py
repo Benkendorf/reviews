@@ -3,6 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import filters, mixins, viewsets
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .filters import TitleFilter
 from .models import Category, Comment, Genre, Review, Title
@@ -72,7 +73,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     queryset = Review.objects.all().order_by('id')
     serializer_class = ReviewSerializer
-    permission_classes = (OwnerOrModerOrAdminOrSuperuserOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModerOrAdminOrSuperuserOrReadOnly)
     pagination_class = PageNumberPagination
 
     def get_serializer_class(self):
@@ -88,7 +89,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     queryset = Comment.objects.all().order_by('id')
     serializer_class = CommentSerializer
-    permission_classes = (OwnerOrModerOrAdminOrSuperuserOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModerOrAdminOrSuperuserOrReadOnly)
     pagination_class = PageNumberPagination
 
     def get_serializer_class(self):
