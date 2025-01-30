@@ -1,12 +1,12 @@
-from attr.setters import validate
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from rest_framework import serializers, status
-from rest_framework.exceptions import ValidationError, NotFound
-from rest_framework.response import Response
-
-from api.constants import MAX_LENGTH_NAME, PATTERN_NAME, EMAIL_SENDERS_YAMDB, MAX_LENGTH_EMAIL
+from rest_framework import serializers
+from rest_framework.exceptions import NotFound, ValidationError
+from api.constants import (MAX_LENGTH_NAME,
+                           PATTERN_NAME,
+                           EMAIL_SENDERS_YAMDB,
+                           MAX_LENGTH_EMAIL)
 from user.validators import validate_me, validate_regex
 
 User = get_user_model()
@@ -45,23 +45,24 @@ class SignUpSerializer(serializers.ModelSerializer):
     def validate(self, validate_data):
         username = validate_data['username']
         email = validate_data['email']
-        if User.objects.filter(email=email).exclude(username=username).exists():
-            raise ValidationError({'email': 'Такой email уже существует.'})
-        if User.objects.filter(username=username).exclude(email=email).exists():
-            raise ValidationError({'username': 'Такой username уже существует.'})
+        if User.objects.filter(
+            email=email
+        ).exclude(username=username).exists():
+            raise ValidationError({'email': 'email уже существует.'})
+        if User.objects.filter(
+            username=username
+        ).exclude(email=email).exists():
+            raise ValidationError({'username': 'username уже существует.'})
         return validate_data
 
     def create(self, validated_data):
         username = validated_data['username']
         email = validated_data['email']
-
-        user, created = User.objects.get_or_create(username=username, email=email)
-
-        confirmation_code = default_token_generator.make_token(user)
-
+        user, _ = User.objects.get_or_create(username=username, email=email)
+        confirm_code = default_token_generator.make_token(user)
         send_mail(
             subject='Confirmation code for accessing the YaMDB API',
-            message=f'Код подтверждения для пользователя {user.username}: {confirmation_code}',
+            message=f'Код для пользователя {user.username}: {confirm_code}',
             from_email=EMAIL_SENDERS_YAMDB,
             recipient_list=[user.email],
             fail_silently=False,
@@ -83,12 +84,12 @@ class TokenSerializer(serializers.Serializer):
 
     def validate(self, validate_data):
         username = validate_data['username']
-        confirmation_code = validate_data['confirmation_code']
+        confirm_code = validate_data['confirmation_code']
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             raise NotFound({'error': 'Пользователь не найден'})
-        if not default_token_generator.check_token(user, confirmation_code):
+        if not default_token_generator.check_token(user, confirm_code):
             raise ValidationError({'error': 'Неверный confirmation_code'})
         validate_data['user'] = user
         return validate_data

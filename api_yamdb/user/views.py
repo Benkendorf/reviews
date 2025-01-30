@@ -1,24 +1,22 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
 from rest_framework import filters, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.permissions import IsAdminRole
-from user.serializers import (TokenSerializer,
-                              SignUpSerializer,
+from user.serializers import (SignUpSerializer,
+                              TokenSerializer,
                               UserSerializer)
 
 User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
     permission_classes = [IsAdminRole]
     http_method_names = ('get', 'post', 'patch', 'delete')
+    serializer_class = UserSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     pagination_class = PageNumberPagination
@@ -28,15 +26,18 @@ class UserViewSet(viewsets.ModelViewSet):
         return User.objects.all().order_by('username')
 
     @action(methods=['get', 'patch'],
-            detail=False, url_name='me',
+            detail=False,
+            url_name='me',
             permission_classes=[IsAuthenticated])
     def me(self, request):
         if request.method == 'GET':
-            serializer = UserSerializer(request.user)
+            serializer = self.serializer_class(request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         elif request.method == 'PATCH':
-            serializer = UserSerializer(request.user, data=request.data, partial=True)
+            serializer = self.serializer_class(
+                request.user, data=request.data, partial=True
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save(role=request.user.role)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -48,9 +49,10 @@ class UserViewSet(viewsets.ModelViewSet):
 class SignUpViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
     http_method_names = ('post',)
+    serializer_class = SignUpSerializer
 
     def create(self, request):
-        serializer = SignUpSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -62,7 +64,7 @@ class TokenViewSet(viewsets.ViewSet):
     serializer_class = TokenSerializer
 
     def create(self, request):
-        serializer = TokenSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         tokens = user.tokens()

@@ -10,6 +10,7 @@ def validate_me(username):
         raise ValidationError('Пользователь с именем me запрещен.')
     return username
 
+
 def validate_regex(username):
     if not re.match(PATTERN_NAME, username):
         raise ValidationError(
