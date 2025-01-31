@@ -2,6 +2,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api.constants import MAX_LENGTH_EMAIL, MAX_LENGTH_NAME
+from user.validators import validate_me, validate_regex
+
 
 class User(AbstractUser):
     USER = 'user'
@@ -15,27 +18,14 @@ class User(AbstractUser):
     )
 
     username = models.CharField(
-        max_length=150,
-        blank=False,
+        max_length=MAX_LENGTH_NAME,
         unique=True,
+        validators=[validate_me, validate_regex],
         verbose_name='Никнэйм'
     )
     email = models.EmailField(
-        max_length=254,
-        blank=False,
-        unique=False
-    )
-    first_name = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True,
-        verbose_name='Имя'
-    )
-    last_name = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True,
-        verbose_name='Фамилия'
+        max_length=MAX_LENGTH_EMAIL,
+        unique=True
     )
     bio = models.TextField(
         blank=True,
@@ -43,11 +33,15 @@ class User(AbstractUser):
         verbose_name='Биография'
     )
     role = models.CharField(
-        max_length=20,
+        max_length=max([len(rus) for item, rus in ROLE_CHOICES]),
         choices=ROLE_CHOICES,
         default=USER,
         verbose_name='Роль'
     )
+
+    class Meta:
+        ordering = ['id']
+        verbose_name = 'Пользователь'
 
     @property
     def is_admin(self):
