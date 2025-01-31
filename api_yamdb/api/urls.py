@@ -10,9 +10,9 @@ from user.views import SignUpViewSet, TokenViewSet, UserViewSet
 
 router_v1 = DefaultRouter()
 # Маршруты приложения user
-router_v1.register(r'users', UserViewSet, basename='users')
-router_v1.register(r'auth/signup', SignUpViewSet, basename='signup')
-router_v1.register(r'auth/token', TokenViewSet, basename='token')
+router_v1.register('users', UserViewSet, basename='users')
+router_v1.register('auth/signup', SignUpViewSet, basename='signup')
+router_v1.register('auth/token', TokenViewSet, basename='token')
 # Маршруты приложения reviews
 router_v1.register('categories', CategoryViewSet, basename='category')
 router_v1.register('genres', GenreViewSet, basename='genre')
