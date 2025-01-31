@@ -3,30 +3,20 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
-from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
+from reviews.models import Category, Comment, Genre, Review, Title
+from api.constants import MIN_SCORE, MAX_SCORE
 
 User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    slug = serializers.SlugField(
-        max_length=50,
-        validators=[UniqueValidator(queryset=Category.objects.all())]
-    )
-
     class Meta:
         fields = ('slug', 'name')
         model = Category
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    slug = serializers.SlugField(
-        max_length=50,
-        validators=[UniqueValidator(queryset=Genre.objects.all())]
-    )
-
     class Meta:
         fields = ('slug', 'name')
         model = Genre
@@ -35,15 +25,16 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
-    description = serializers.CharField(
-        required=False
-    )
     rating = serializers.IntegerField()
 
     class Meta:
-        #fields = ('id', 'genre', 'category', 'description', 'year', 'rating')
         fields = '__all__'
         model = Title
+
+
+class RatingField(serializers.IntegerField):
+    def to_representation(self, value):
+        return value
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -60,20 +51,14 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         allow_null=False,
         allow_empty=False,
     )
-    description = serializers.CharField(
+    year = serializers.IntegerField()
+    rating = RatingField(
         required=False
     )
 
     class Meta:
         fields = '__all__'
         model = Title
-
-    def validate_name(self, value):
-        if len(value) > 256:
-            raise serializers.ValidationError(
-                'Название не может быть длиннее 256 символов!'
-            )
-        return value
 
     def validate_year(self, value):
         if value > datetime.now().year:
@@ -87,99 +72,58 @@ class TitleCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нельзя добавить произведение несуществующей категории!'
             )
-
-        if 'genre' not in data:
-            raise serializers.ValidationError(
-                'Нельзя добавить произведение без жанра!'
-            )
-
-        for genre in data['genre']:
-            if genre not in Genre.objects.all():
+        if self.context['request'].method != 'PATCH':
+            if 'genre' not in data:
                 raise serializers.ValidationError(
-                    'Нельзя добавить произведение несуществующего жанра!'
+                    'Нельзя добавить произведение без жанра!'
                 )
+
+            for genre in data['genre']:
+                if genre not in Genre.objects.all():
+                    raise serializers.ValidationError(
+                        'Нельзя добавить произведение несуществующего жанра!'
+                    )
 
         return data
 
 
-class TitleUpdateSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        queryset=Genre.objects.all(),
-        slug_field='slug',
-        many=True,
-        allow_null=False,
-        allow_empty=False,
-    )
-    category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(),
-        slug_field='slug',
-        allow_null=False,
-        allow_empty=False,
-    )
-    description = serializers.CharField(
-        required=False
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = Title
-
-    def validate_name(self, value):
-        if len(value) > 256:
-            raise serializers.ValidationError(
-                'Название не может быть длиннее 256 символов!'
-            )
-        return value
-
-    def validate_year(self, value):
-        if value > datetime.now().year:
-            raise serializers.ValidationError(
-                'Нельзя добавить произведение из будущего!'
-            )
-        return value
-
-    def update(self, instance, validated_data):
-        if 'genre' in validated_data:
-            genres = validated_data.pop('genre')
-            for genre in genres:
-                current_genre, genre_status = Genre.objects.get_or_create(
-                    **genre
-                )
-                GenreTitle.objects.get_or_create(
-                    genre=current_genre, title=instance)
-
-        if 'name' in validated_data:
-            instance.name = validated_data['name']
-        if 'year' in validated_data:
-            instance.year = validated_data['year']
-        if 'description' in validated_data:
-            instance.description = validated_data['description']
-        if 'category' in validated_data:
-            instance.category = validated_data['category']
-        instance.save()
-        return instance
-
-
 class ReviewCreateSerializer(serializers.ModelSerializer):
-
-    title = serializers.PrimaryKeyRelatedField(
-        queryset=Title.objects.all(),
-        required=False
-    )
     author = serializers.SlugRelatedField(
         queryset=User.objects.all(),
         slug_field='username',
         required=False
     )
 
+    score = serializers.IntegerField()
+
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
 
     def validate_score(self, value):
-        if not (1 < value <= 10):
-            raise serializers.ValidationError('Оценка должна быть от 1 до 10!')
+        if not (MIN_SCORE < value <= MAX_SCORE):
+            raise serializers.ValidationError(
+                f'Оценка должна быть от {MIN_SCORE} до {MAX_SCORE}!'
+            )
         return value
+
+    def validate(self, data):
+        title_id = self.context.get('request'
+                                    ).parser_context.get('kwargs'
+                                                         ).get('title_id')
+
+        title = get_object_or_404(
+            Title,
+            id=title_id
+        )
+        if Review.objects.filter(
+            title=title,
+            author=self.context['request'].user
+        ).exists() and self.context['request'].method != 'PATCH':
+            raise serializers.ValidationError(
+                'Вы уже оставили отзыв к этому произведению!'
+            )
+        return data
 
     def create(self, validated_data):
         title_id = self.context.get('request'
@@ -200,33 +144,15 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         return review
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    title = TitleCreateSerializer()
-    author = serializers.StringRelatedField(
-        read_only=True
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = Review
-
-
 class CommentCreateSerializer(serializers.ModelSerializer):
-    title = serializers.PrimaryKeyRelatedField(
-        queryset=Title.objects.all(),
-        required=False
-    )
-    review = serializers.PrimaryKeyRelatedField(
-        queryset=Review.objects.all(),
-        required=False
-    )
-    author = serializers.PrimaryKeyRelatedField(
+    author = serializers.SlugRelatedField(
         queryset=User.objects.all(),
-        required=False
+        required=False,
+        slug_field='username'
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
 
     def create(self, validated_data):
@@ -245,14 +171,3 @@ class CommentCreateSerializer(serializers.ModelSerializer):
             text=validated_data['text']
         )
         return comment
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    review = ReviewSerializer()
-    author = serializers.StringRelatedField(
-        read_only=True
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = Comment

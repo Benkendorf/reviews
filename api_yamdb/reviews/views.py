@@ -1,6 +1,5 @@
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework import filters, mixins, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -11,52 +10,50 @@ from .permissions import (OwnerOrModerOrAdminOrSuperuserOrReadOnly,
                           AdminOrSuperuserOrReadOnly)
 from .serializers import (CategorySerializer,
                           CommentCreateSerializer,
-                          CommentSerializer,
                           GenreSerializer,
-                          ReviewSerializer,
                           ReviewCreateSerializer,
                           TitleSerializer,
-                          TitleCreateSerializer,
-                          TitleUpdateSerializer)
+                          TitleCreateSerializer)
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                mixins.DestroyModelMixin,
                                viewsets.GenericViewSet):
-    pass
+    pagination_class = PageNumberPagination
+
+
+class DefaulPaginationModelViewset(viewsets.ModelViewSet):
+    pagination_class = PageNumberPagination
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
-    queryset = Category.objects.all().order_by('id')
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     lookup_field = 'slug'
     permission_classes = (AdminOrSuperuserOrReadOnly,)
-    pagination_class = PageNumberPagination
 
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
 
 class GenreViewSet(CreateListDestroyViewSet):
-    queryset = Genre.objects.all().order_by('id')
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     lookup_field = 'slug'
     permission_classes = (AdminOrSuperuserOrReadOnly,)
-    pagination_class = PageNumberPagination
 
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(DefaulPaginationModelViewset):
     http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     queryset = Title.objects.all().annotate(
         rating=Avg('reviews__score')
     ).order_by('name')
     serializer_class = TitleCreateSerializer
     permission_classes = (AdminOrSuperuserOrReadOnly,)
-    pagination_class = PageNumberPagination
 
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -64,38 +61,23 @@ class TitleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve', 'destroy'):
             return TitleSerializer
-        elif self.action == 'partial_update':
-            return TitleUpdateSerializer
         return TitleCreateSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(DefaulPaginationModelViewset):
     http_method_names = ['get', 'post', 'head', 'patch', 'delete']
-    queryset = Review.objects.all().order_by('id')
-    serializer_class = ReviewSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModerOrAdminOrSuperuserOrReadOnly)
-    pagination_class = PageNumberPagination
-
-    def get_serializer_class(self):
-        if self.action in ('list', 'retrieve', 'destroy'):
-            return ReviewSerializer
-        return ReviewCreateSerializer
+    queryset = Review.objects.all().order_by('-pub_date')
+    serializer_class = ReviewCreateSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          OwnerOrModerOrAdminOrSuperuserOrReadOnly)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(DefaulPaginationModelViewset):
     http_method_names = ['get', 'post', 'head', 'patch', 'delete']
-    queryset = Comment.objects.all().order_by('id')
-    serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModerOrAdminOrSuperuserOrReadOnly)
-    pagination_class = PageNumberPagination
-
-    def get_serializer_class(self):
-        if self.action in ('list', 'retrieve', 'destroy'):
-            return CommentSerializer
-        return CommentCreateSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    queryset = Comment.objects.all().order_by('-pub_date')
+    serializer_class = CommentCreateSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          OwnerOrModerOrAdminOrSuperuserOrReadOnly)
