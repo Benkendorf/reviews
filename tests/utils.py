@@ -169,6 +169,7 @@ def create_single_comment(client, title_id, review_id, text):
         f'/api/v1/titles/{title_id}/reviews/{review_id}/comments/',
         data=data
     )
+    print(response.json())
     assert response.status_code == HTTPStatus.CREATED, (
         'Если POST-запрос авторизованного пользователя к '
         '`/api/v1/titles/{title_id}/reviews/{review_id}/comments/` содержит '
