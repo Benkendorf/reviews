@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from user.permissions import IsAdminRole
 from user.serializers import (SignUpSerializer,
@@ -46,25 +47,21 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.save()
 
 
-class SignUpViewSet(viewsets.ViewSet):
+class SignUp(APIView):
     permission_classes = [AllowAny]
-    http_method_names = ('post',)
-    serializer_class = SignUpSerializer
 
-    def create(self, request):
-        serializer = self.serializer_class(data=request.data)
+    def post(self, request):
+        serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class TokenViewSet(viewsets.ViewSet):
+class Token(APIView):
     permission_classes = [AllowAny]
-    http_method_names = ('post',)
-    serializer_class = TokenSerializer
 
-    def create(self, request):
-        serializer = self.serializer_class(data=request.data)
+    def post(self, request):
+        serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         tokens = user.tokens()

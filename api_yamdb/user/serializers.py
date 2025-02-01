@@ -55,14 +55,13 @@ class SignUpSerializer(serializers.ModelSerializer):
         return validate_data
 
     def create(self, validated_data):
-        username = validated_data['username']
-        email = validated_data['email']
-        user, _ = User.objects.get_or_create(username=username, email=email)
+        user, _ = User.objects.get_or_create(**validated_data)
         confirm_code = default_token_generator.make_token(user)
+
         send_mail(
-            subject='Confirmation code for accessing the YaMDB API',
-            message=f'Код для пользователя {user.username}: {confirm_code}',
-            from_email=EMAIL_SENDERS_YAMDB,
+            subject="Код подтверждения для YaMDB",
+            message=f"Ваш код подтверждения: {confirm_code}",
+            from_email="noreply@yamdb.com",
             recipient_list=[user.email],
             fail_silently=False,
         )
