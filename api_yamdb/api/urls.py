@@ -6,7 +6,7 @@ from reviews.views import (CategoryViewSet,
                            TitleViewSet,
                            ReviewViewSet,
                            CommentViewSet)
-from user.views import UserViewSet, Token, SignUp
+from user.views import SignUp, Token, UserViewSet
 
 router_v1 = DefaultRouter()
 # Маршруты приложения user
