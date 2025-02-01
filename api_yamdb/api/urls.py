@@ -6,13 +6,11 @@ from reviews.views import (CategoryViewSet,
                            TitleViewSet,
                            ReviewViewSet,
                            CommentViewSet)
-from user.views import SignUpViewSet, TokenViewSet, UserViewSet
+from user.views import UserViewSet, Token, SignUp
 
 router_v1 = DefaultRouter()
 # Маршруты приложения user
 router_v1.register('users', UserViewSet, basename='users')
-router_v1.register('auth/signup', SignUpViewSet, basename='signup')
-router_v1.register('auth/token', TokenViewSet, basename='token')
 # Маршруты приложения reviews
 router_v1.register('categories', CategoryViewSet, basename='category')
 router_v1.register('genres', GenreViewSet, basename='genre')
@@ -29,5 +27,7 @@ router_v1.register(
 )
 
 urlpatterns = [
-    path('v1/', include(router_v1.urls))
+    path('v1/', include(router_v1.urls)),
+    path('v1/auth/signup/', SignUp.as_view(), name='signup'),
+    path('v1/auth/token/', Token.as_view(), name='token')
 ]

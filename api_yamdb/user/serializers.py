@@ -4,9 +4,8 @@ from django.core.mail import send_mail
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
 from api.constants import (MAX_LENGTH_NAME,
-                           PATTERN_NAME,
-                           EMAIL_SENDERS_YAMDB,
-                           MAX_LENGTH_EMAIL)
+                           MAX_LENGTH_EMAIL,
+                           PATTERN_NAME)
 from user.validators import validate_me, validate_regex
 
 User = get_user_model()
@@ -23,7 +22,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
-        read_only_fields = ('role',)
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -56,14 +54,13 @@ class SignUpSerializer(serializers.ModelSerializer):
         return validate_data
 
     def create(self, validated_data):
-        username = validated_data['username']
-        email = validated_data['email']
-        user, _ = User.objects.get_or_create(username=username, email=email)
+        user, _ = User.objects.get_or_create(**validated_data)
         confirm_code = default_token_generator.make_token(user)
+
         send_mail(
-            subject='Confirmation code for accessing the YaMDB API',
-            message=f'Код для пользователя {user.username}: {confirm_code}',
-            from_email=EMAIL_SENDERS_YAMDB,
+            subject="Код подтверждения для YaMDB",
+            message=f"Ваш код подтверждения: {confirm_code}",
+            from_email="noreply@yamdb.com",
             recipient_list=[user.email],
             fail_silently=False,
         )
@@ -77,10 +74,6 @@ class TokenSerializer(serializers.Serializer):
         required=True
     )
     confirmation_code = serializers.CharField(required=True)
-
-    class Meta:
-        model = User
-        fields = ('username', 'confirmation_code')
 
     def validate(self, validate_data):
         username = validate_data['username']
