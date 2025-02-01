@@ -3,8 +3,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
-from api.constants import (EMAIL_SENDERS_YAMDB,
-                           MAX_LENGTH_NAME,
+from api.constants import (MAX_LENGTH_NAME,
                            MAX_LENGTH_EMAIL,
                            PATTERN_NAME)
 from user.validators import validate_me, validate_regex
