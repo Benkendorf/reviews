@@ -40,8 +40,11 @@ class User(AbstractUser):
     )
 
     class Meta:
-        ordering = ['id']
+        ordering = ['username']
         verbose_name = 'Пользователь'
+
+    def __str__(self):
+        return self.username
 
     @property
     def is_admin(self):
@@ -57,6 +60,3 @@ class User(AbstractUser):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
-
-    def __str__(self):
-        return self.username
