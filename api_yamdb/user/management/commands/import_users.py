@@ -2,6 +2,7 @@ import csv
 
 from django.core.management import BaseCommand
 
+from api.constants import STATIC_PATH_CSV_FILES
 from user.models import User
 
 
@@ -9,7 +10,7 @@ class Command(BaseCommand):
     help = 'Загрузка пользовательских данных в БД из CSV'
 
     def handle(self, *args, **options):
-        csv_file = 'static/data/users.csv'
+        csv_file = STATIC_PATH_CSV_FILES + 'users.csv'
         model = User
 
         try:

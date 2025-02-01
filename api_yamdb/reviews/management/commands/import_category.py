@@ -2,6 +2,7 @@ import csv
 
 from django.core.management import BaseCommand
 
+from api.constants import STATIC_PATH_CSV_FILES
 from reviews.models import Category
 
 
@@ -9,7 +10,7 @@ class Command(BaseCommand):
     help = 'Загрузка данных категорий в БД из CSV'
 
     def handle(self, *args, **options):
-        csv_file = 'static/data/category.csv'
+        csv_file = STATIC_PATH_CSV_FILES + 'category.csv'
         model = Category
         try:
             with open(csv_file, mode='r', encoding='utf-8') as file:

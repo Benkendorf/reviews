@@ -11,7 +11,16 @@ from api.constants import (CHAR_FIELD_MAX_LENGTH,
 User = get_user_model()
 
 
-class DefaultModel(models.Model):
+class AbstractNameSlugModel(models.Model):
+    name = models.CharField(
+        max_length=CHAR_FIELD_MAX_LENGTH,
+        verbose_name='Название'
+    )
+    slug = models.SlugField(
+        unique=True,
+        verbose_name='Слаг'
+    )
+
     class Meta:
         abstract = True
         ordering = ['name']
@@ -20,37 +29,19 @@ class DefaultModel(models.Model):
         return self.name[TEXT_CUTOFF_LENGTH]
 
 
-class Category(DefaultModel):
-    name = models.CharField(
-        max_length=CHAR_FIELD_MAX_LENGTH,
-        verbose_name='Название'
-    )
-    slug = models.SlugField(
-        unique=True,
-        verbose_name='Слаг'
-    )
-
-    class Meta(DefaultModel.Meta):
+class Category(AbstractNameSlugModel):
+    class Meta(AbstractNameSlugModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
 
-class Genre(DefaultModel):
-    name = models.CharField(
-        max_length=CHAR_FIELD_MAX_LENGTH,
-        verbose_name='Название'
-    )
-    slug = models.SlugField(
-        unique=True,
-        verbose_name='Слаг'
-    )
-
-    class Meta(DefaultModel.Meta):
+class Genre(AbstractNameSlugModel):
+    class Meta(AbstractNameSlugModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
 
-class Title(DefaultModel):
+class Title(models.Model):
     name = models.CharField(
         max_length=CHAR_FIELD_MAX_LENGTH,
         verbose_name='Название'
@@ -78,7 +69,7 @@ class Title(DefaultModel):
         verbose_name='Категория'
     )
 
-    class Meta(DefaultModel.Meta):
+    class Meta(AbstractNameSlugModel.Meta):
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
         ordering = ['name']
@@ -99,6 +90,20 @@ class GenreTitle(models.Model):
 
 
 class DefaultReviewCommentModel(models.Model):
+    text = models.TextField(
+        verbose_name='Текст'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор'
+    )
+
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата публикации'
+    )
+
     class Meta:
         abstract = True
         ordering = ['-pub_date']
@@ -114,24 +119,12 @@ class Review(DefaultReviewCommentModel):
         verbose_name='Произведение'
     )
 
-    text = models.TextField(
-        verbose_name='Текст'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор'
-    )
     score = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(MIN_SCORE),
             MaxValueValidator(MAX_SCORE)
         ],
         verbose_name='Оценка'
-    )
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата публикации'
     )
 
     class Meta(DefaultReviewCommentModel.Meta):
@@ -150,26 +143,11 @@ class Review(DefaultReviewCommentModel):
 class Comment(DefaultReviewCommentModel):
     review = models.ForeignKey(
         Review,
-        related_name='comments',
         on_delete=models.CASCADE,
         verbose_name='Отзыв'
-    )
-
-    text = models.TextField(
-        verbose_name='Текст'
-    )
-    author = models.ForeignKey(
-        User,
-        related_name='comments',
-        on_delete=models.CASCADE,
-        verbose_name='Автор'
-    )
-
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата публикации'
     )
 
     class Meta(DefaultReviewCommentModel.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+        default_related_name = 'comments'

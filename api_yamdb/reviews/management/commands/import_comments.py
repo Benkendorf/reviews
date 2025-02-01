@@ -3,6 +3,7 @@ import csv
 from django.core.management import BaseCommand
 from django.utils.dateparse import parse_datetime
 
+from api.constants import STATIC_PATH_CSV_FILES
 from reviews.models import Comment, Review
 from user.models import User
 
@@ -11,7 +12,7 @@ class Command(BaseCommand):
     help = 'Загрузка комментариев в БД из CSV'
 
     def handle(self, *args, **options):
-        csv_file = 'static/data/comments.csv'
+        csv_file = STATIC_PATH_CSV_FILES + 'comments.csv'
         model = Comment
         try:
             with open(csv_file, mode='r', encoding='utf-8') as file:

@@ -15,3 +15,6 @@ TEXT_CUTOFF_LENGTH = 30
 
 MIN_SCORE = 1
 MAX_SCORE = 10
+
+# Общие константы
+STATIC_PATH_CSV_FILES = 'static/data/'

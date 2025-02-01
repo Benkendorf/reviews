@@ -2,6 +2,7 @@ import csv
 
 from django.core.management import BaseCommand
 
+from api.constants import STATIC_PATH_CSV_FILES
 from reviews.models import GenreTitle
 
 
@@ -9,7 +10,7 @@ class Command(BaseCommand):
     help = 'Загрузка жанров связанных с заголовками в БД из CSV'
 
     def handle(self, *args, **options):
-        csv_file = 'static/data/genre_title.csv'
+        csv_file = STATIC_PATH_CSV_FILES + 'genre_title.csv'
         model = GenreTitle
 
         try:
