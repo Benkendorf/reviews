@@ -2,7 +2,7 @@ import re
 
 from django.core.exceptions import ValidationError
 
-from api.constants import PATTERN_NAME, PATTERN_ME
+from api.constants import PATTERN_ME, PATTERN_NAME
 
 
 def validate_me(username):

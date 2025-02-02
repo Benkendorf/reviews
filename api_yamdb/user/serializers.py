@@ -4,9 +4,10 @@ from django.core.mail import send_mail
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
 
-from api.constants import (MAX_LENGTH_EMAIL,
+from api.constants import (EMAIL_SENDERS_YAMDB,
+                           MAX_LENGTH_EMAIL,
                            MAX_LENGTH_NAME,
-                           PATTERN_NAME, EMAIL_SENDERS_YAMDB)
+                           PATTERN_NAME)
 from user.validators import validate_me, validate_regex
 
 User = get_user_model()
