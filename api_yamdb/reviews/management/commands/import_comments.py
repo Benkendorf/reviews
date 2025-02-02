@@ -12,7 +12,7 @@ class Command(BaseCommand):
     help = 'Загрузка комментариев в БД из CSV'
 
     def handle(self, *args, **options):
-        csv_file = STATIC_PATH_CSV_FILES + 'comments.csv'
+        csv_file = f'{STATIC_PATH_CSV_FILES}comments.csv'
         model = Comment
         try:
             with open(csv_file, mode='r', encoding='utf-8') as file:

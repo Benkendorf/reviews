@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = 'Загрузка заголовков в БД из CSV'
 
     def handle(self, *args, **options):
-        csv_file = STATIC_PATH_CSV_FILES + 'titles.csv'
+        csv_file = f'{STATIC_PATH_CSV_FILES}titles.csv'
         model = Title
 
         try:
