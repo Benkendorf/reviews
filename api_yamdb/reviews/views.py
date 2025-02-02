@@ -6,7 +6,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .filters import TitleFilter
-from .models import Category, Comment, Genre, Review, Title
+from .models import Category, Genre, Review, Title
 from .permissions import (OwnerOrModerOrAdminOrSuperuserOrReadOnly,
                           AdminOrSuperuserOrReadOnly)
 from .serializers import (CategorySerializer,
@@ -24,6 +24,7 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
     permission_classes = (AdminOrSuperuserOrReadOnly,)
 
 
@@ -34,13 +35,11 @@ class DefaulPaginationModelViewset(viewsets.ModelViewSet):
 class CategoryViewSet(CreateListDestroyViewSet):
     queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
-    lookup_field = 'slug'
 
 
 class GenreViewSet(CreateListDestroyViewSet):
     queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
-    lookup_field = 'slug'
 
 
 class TitleViewSet(DefaulPaginationModelViewset):
@@ -67,21 +66,13 @@ class ReviewViewSet(DefaulPaginationModelViewset):
                           OwnerOrModerOrAdminOrSuperuserOrReadOnly)
 
     def get_title(self):
-        title = get_object_or_404(
+        return get_object_or_404(
             Title,
             id=self.kwargs['title_id']
         )
-        return title
 
     def get_queryset(self):
-        title = get_object_or_404(
-            Title,
-            id=self.kwargs['title_id']
-        )
-        queryset = Review.objects.filter(
-            title=title
-        ).order_by('-pub_date')
-        return queryset
+        return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
         serializer.save(
@@ -101,18 +92,14 @@ class CommentViewSet(DefaulPaginationModelViewset):
             Title,
             id=self.kwargs['title_id']
         )
-        review = get_object_or_404(
+        return get_object_or_404(
             Review,
             id=self.kwargs['review_id'],
             title=title
         )
-        return review
 
     def get_queryset(self):
-        queryset = Comment.objects.filter(
-            review=self.get_review()
-        ).order_by('-pub_date')
-        return queryset
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         serializer.save(
