@@ -69,11 +69,14 @@ class Title(models.Model):
         verbose_name='Категория'
     )
 
-    class Meta(AbstractNameSlugModel.Meta):
+    class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
         ordering = ['name']
         default_related_name = 'titles'
+
+    def __str__(self):
+        return self.name[TEXT_CUTOFF_LENGTH]
 
 
 class GenreTitle(models.Model):
@@ -87,6 +90,9 @@ class GenreTitle(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Произведение'
     )
+
+    def __str__(self):
+        return f'Жанр: {self.genre}, произведение: {self.title}'
 
 
 class DefaultReviewCommentModel(models.Model):
