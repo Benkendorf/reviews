@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = 'Загрузка пользовательских данных в БД из CSV'
 
     def handle(self, *args, **options):
-        csv_file = STATIC_PATH_CSV_FILES + 'users.csv'
+        csv_file = f'{STATIC_PATH_CSV_FILES}users.csv'
         model = User
 
         try:
