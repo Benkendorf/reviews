@@ -62,7 +62,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         send_mail(
             subject='Код подтверждения для YaMDB',
             message=f'Ваш код подтверждения: {confirm_code}',
-            from_email= {EMAIL_SENDERS_YAMDB},
+            from_email={EMAIL_SENDERS_YAMDB},
             recipient_list=[user.email],
             fail_silently=False,
         )
