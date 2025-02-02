@@ -12,7 +12,7 @@ class Command(BaseCommand):
     help = 'Загрузка ревью в БД из CSV'
 
     def handle(self, *args, **options):
-        csv_file = STATIC_PATH_CSV_FILES + 'review.csv'
+        csv_file = f'{STATIC_PATH_CSV_FILES}review.csv'
         model = Review
 
         try:

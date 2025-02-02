@@ -7,7 +7,7 @@ PATTERN_NAME = r'^[\w.@+-]+\Z'
 
 PATTERN_ME = 'me'
 
-EMAIL_SENDERS_YAMDB = 'yamdb@yamdb.ru'
+EMAIL_SENDERS_YAMDB = 'noreply@yamdb.ru'
 
 # Константы приложения reviews.
 CHAR_FIELD_MAX_LENGTH = 256
