@@ -6,7 +6,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from api.constants import (MAX_LENGTH_EMAIL,
                            MAX_LENGTH_NAME,
-                           PATTERN_NAME)
+                           PATTERN_NAME, EMAIL_SENDERS_YAMDB)
 from user.validators import validate_me, validate_regex
 
 User = get_user_model()
@@ -59,9 +59,9 @@ class SignUpSerializer(serializers.ModelSerializer):
         confirm_code = default_token_generator.make_token(user)
 
         send_mail(
-            subject="Код подтверждения для YaMDB",
-            message=f"Ваш код подтверждения: {confirm_code}",
-            from_email="noreply@yamdb.com",
+            subject='Код подтверждения для YaMDB',
+            message=f'Ваш код подтверждения: {confirm_code}',
+            from_email= {EMAIL_SENDERS_YAMDB},
             recipient_list=[user.email],
             fail_silently=False,
         )
